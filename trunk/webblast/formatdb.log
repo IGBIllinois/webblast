@@ -1,0 +1,43 @@
+
+========================[ Apr 26, 2010  2:52 PM ]========================
+ERROR: [000.000] No database name was specified
+
+========================[ Apr 28, 2010 10:54 AM ]========================
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428105019.fas"
+Closing volume /export/home/blastdbs/userdbs/nevoband_20100428105019.fas with 76603 sequences, 199,999,833 letters(.nsq file = 50068615 bytes; .nhr file = 5394807 bytes)
+Formatted 76603 sequences in volume 0
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428105019.fas"
+Formatted 194940 sequences in volume 1
+SUCCESS: formatted database /export/home/blastdbs/userdbs/nevoband_20100428105019.fas
+
+========================[ Apr 28, 2010 11:07 AM ]========================
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428110600.fas"
+Closing volume /export/home/blastdbs/userdbs/nevoband_20100428110600.fas with 76603 sequences, 199,999,833 letters(.nsq file = 50068615 bytes; .nhr file = 5394807 bytes)
+Formatted 76603 sequences in volume 0
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428110600.fas"
+Formatted 194940 sequences in volume 1
+SUCCESS: formatted database /export/home/blastdbs/userdbs/nevoband_20100428110600.fas
+
+========================[ Apr 28, 2010 11:20 AM ]========================
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428111956.fas"
+Closing volume /export/home/blastdbs/userdbs/nevoband_20100428111956.fas with 76603 sequences, 199,999,833 letters(.nsq file = 50068615 bytes; .nhr file = 5394807 bytes)
+Formatted 76603 sequences in volume 0
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428111956.fas"
+Formatted 194940 sequences in volume 1
+SUCCESS: formatted database /export/home/blastdbs/userdbs/nevoband_20100428111956.fas
+
+========================[ Apr 28, 2010 11:21 AM ]========================
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428111956.fas"
+Closing volume /export/home/blastdbs/userdbs/nevoband_20100428111956.fas with 76603 sequences, 199,999,833 letters(.nsq file = 50068615 bytes; .nhr file = 5394807 bytes)
+Formatted 76603 sequences in volume 0
+Version 2.2.19 [Nov-02-2008]
+Started database file "/export/home/blastdbs/userdbs/nevoband_20100428111956.fas"
+Formatted 194940 sequences in volume 1
+SUCCESS: formatted database /export/home/blastdbs/userdbs/nevoband_20100428111956.fas

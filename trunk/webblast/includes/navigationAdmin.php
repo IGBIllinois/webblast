@@ -1,0 +1,1 @@
+<hr><a href="admin.php?view=paths">Configuration</a> | <a href="admin.php?view=userconf">Users</a>  | <a href="admin.php?view=databases">Databases</a> | <a href="admin.php?view=scheduler">Scheduler</a> | <a href="admin.php?view=nodestatus">Nodes Status</a> | <a href="admin.php?view=jobs">User Jobs</a> | <a href="admin.php?view=uploaddatabase">Upload Database</a><hr>
