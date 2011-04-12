@@ -129,7 +129,7 @@ function selectOptionByValue(selObj, val){
 
 function UncheckAll(field)
 {
-	for(i=0; i<field.length; i++)
+	for(i=0; i < field.length; i++)
 	{
 		field[i].checked=false;
 	}
