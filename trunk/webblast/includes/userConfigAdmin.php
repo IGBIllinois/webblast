@@ -40,7 +40,7 @@ User Details:
 <tr>
 <td>
 Userid:
-</td
+</td>
 <td>
 <INPUT TYPE="TEXT" VALUE="<?php echo $userInfoArray[0]["netid"]; ?>" NAME="netId" SIZE=45>
 </td>
