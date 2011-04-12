@@ -1,0 +1,127 @@
+<?php
+
+
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+//Variable defaults
+$filterValue="T";
+$megaBlast="F";
+$errorJobName="";
+$errorProgram="";
+$errorSeqFile="";
+$errorFilter="";
+$errorDataBase="";
+$errorExpect="";
+$errorWordSize="";
+$errorMatParam="";
+$errorCompAdj="";
+$errorGeneticCode="";
+$errorDBGeneticCode="";
+$errorDescriptions="";
+$errorAlignments="";
+$errorMatchScores="";
+$errorGapCosts="";
+$errorQueryStrands="";
+$errorFormat="";
+$errorFormatShiftPenalty="";
+$errorUngappedAlignement="";
+$errorAlgorithm="";
+$errorOptimizeFor="";
+
+//Initialize database
+$sqlDataBase= new SQLDataBase('localhost','blastWeb','blastWeb','igb123');
+
+//fasta query submitted start parsing to mysql
+if(isset($_POST['submitfasta']))
+{
+	
+	$target_path = "/var/www/html/webblast/uploads/test.fasta";
+	$job = new Job($sqlDataBase);
+	
+	//Check for errors and conflicts
+	$errorsNotFound=1;
+	echo $_POST['PROGRAM']." ".$_POST['GAP_COSTS'];		
+		
+	if(($_POST['BLAST_PROGRAMS']=="blastn") && ($_POST['GAP_COSTS']=="0 0"))
+	{
+		$errorsNotFound=0;
+		$errorGapCosts="<FONT COLOR=\"red\">Greedy extension must be used if linear</FONT>";
+	}	
+		
+	if(!move_uploaded_file($_FILES['SEQFILE']['tmp_name'], $target_path))
+	{
+		$errorsNotFound=0;
+		$errorSeqFile="<FONT COLOR=\"red\">File Upload Failed</FONT>";	
+	}		
+	
+	if(($_POST['BLAST_PROGRAMS']=="blastn" || $_POST['BLAST_PROGRAMS']=="discMegablast" || $_POST['BLAST_PROGRAMS']=="megaBlast") && $_POST['PROGRAM']!=1)
+	{
+		$errorsNotFound=0;
+		$errorOptimizeFor="<FONT COLOR=\"red\">May only optimize for blastn</FONT>";
+	}
+	
+	if(($_POST['BLAST_PROGRAMS'] == "blastp" || $_POST['BLAST_PROGRAMS'] == "psiBlast" || $_POST['BLAST_PROGRAMS'] == "phiBlast") && ($_POST['PROGRAM']!=2))
+	{
+		$errorsNotFound=0;
+		$errorAlgorithm="<FONT COLOR=\"red\">May only select algorithm for blastp</FONT>";
+	}
+	
+	if($_POST['BLAST_PROGRAMS']=="megaBlast")
+	{
+		$megaBlast="T";		
+	}
+	
+	$filterValue="\"";
+	
+	if(isset($_POST['MASK_LOOKUP_TABLE']))
+	{
+		$filterValue=$filterValue."m";
+	}
+	
+	
+	if(isset($_POST['LOW_COMPLEXITY']))
+	{
+		$filterValue=$filterValue." L";
+		echo "Low Complexity Used";
+	}
+	
+	$filterValue=$filterValue."\"";
+
+	if(isset($_POST['LCASE_MASK']))
+	{
+		$filterValue=$filterValue." -U";
+	}
+		
+	echo $filterValue;	
+	if($errorsNotFound) {
+    		echo "<br>The file ".  basename( $_FILES['SEQFILE']['name'])." has been uploaded";
+    		$userid="1";
+    		echo $job->CreateJob($_POST['JOB_NAME'],$userid);
+
+	    	$fastaParser = new Fasta($target_path);
+	    	if($fastaParser->isFromFile())
+	    	{
+			echo "<br>Found file";
+	    	}
+	    	//use fasta parser to loop through queries
+	    	while($fastaQuery=$fastaParser->fetchNext())
+	    	{
+	      		if(!$fastaQuery)
+	      		{
+				echo "<br>Returned False";
+	      		}
+	      		else
+	      		{
+				$job->AddQuery($fastaQuery['sequence'],$fastaQuery['id'],$_POST['PROGRAM'],$filterValue,$_POST['DATALIB'],$_POST['EXPECT'],$_POST['WORD_SIZE'],$_POST['MAT_PARAM'],$_POST['COMP_ADJ'],$_POST['GENETIC_CODE'],$_POST['DB_GENETIC_CODE'],$_POST['FRAME_SHIFT_PENALTY'],$_POST['DESCRIPTIONS'],$_POST['ALIGNMENTS'],$_POST['MATCH_SCORES'],$_POST['GAP_COSTS'],$_POST['QUERY_STRANDS'],$_POST['FORMAT'],$megaBlast);
+	      		}
+	 	}
+	}else{
+	    $errorSeqFile="<FONT COLOR=\"red\">Error loading file</FONT>";
+	}
+		
+	echo "<br>Ran Submit Code";
+	
+	}			
+
+?>

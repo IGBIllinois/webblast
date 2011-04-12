@@ -1,0 +1,161 @@
+<?php
+class Job
+{
+	private $jobid;
+	private $jobname;
+	private $userid;
+	private $sqlDataBase;
+	private $description;
+	private $queryPath;
+	private $resultsPath;
+
+	public function __construct(SQLDataBase $sqlDataBase)
+	{	
+		$this->sqlDataBase=$sqlDataBase;
+		$jobid="";
+		$jobname="";
+		$userid="";
+		$description="";
+		$queryPath="";
+		$countQueries=0;
+	}
+
+	public function __destruct()
+	{
+	}
+
+	public function DeleteJob()
+	{
+		$queryDeleteJobQueries = "DELETE FROM blast_queries WHERE jobid=".$this->jobid."";
+                $queryDeleteJobResults = "DELETE FROM blast_results WHERE jobid=".$this->jobid."";
+                $queryDeleteJobResultsHits = "DELETE FROM blast_results_hits WHERE jobid=".$this->jobid."";
+                $queryDeleteJob = "DELETE FROM jobs WHERE id=".$this->jobid."";
+
+		$this->delTree($this->queryPath."/".$this->jobid);
+		$this->delTree($this->resultsPath."/".$this->jobid);
+
+                $this->sqlDataBase->nonSelectQuery($queryDeleteJobQueries);
+                $this->sqlDataBase->nonSelectQuery($queryDeleteJobResults);
+                $this->sqlDataBase->nonSelectQuery($queryDeleteJobResultsHits);
+                $this->sqlDataBase->nonSelectQuery($queryDeleteJob);
+	}
+
+	public function CancelJob()
+	{
+		$statusCanceled = 4;
+                $statusRunning=2;
+                $statusCompleted=3;
+                $statusNew=1;
+                $queryCancelAllNonRunnigQueries="UPDATE blast_queries SET statusid=".$statusCanceled." WHERE statusid=".$statusNew." AND jobid=".$this->jobid;
+                echo $queryCancelAllNonRunnigQueries;
+                $sqlDataBase->nonSelectQuery($queryCancelAllNonRunnigQueries);
+	}	
+	
+	public function CreateJob($newJobName,$loggedUserid)
+	{
+		$this->jobname = $newJobName;
+		$this->userid = $loggedUserid;
+
+		$sql = "INSERT INTO jobs (name,description,submitDate,userid,progress) VALUES (\"".$this->jobname."\",\"".$this->description."\",NOW(),".$this->userid.",0)";
+		$this->jobid=$this->sqlDataBase->insertQuery($sql);
+		
+		$queryPathConfig="SELECT queriespath,resultspath FROM config";
+		$pathConfig= $this->sqlDataBase->query($queryPathConfig);
+		$this->queryPath=$pathConfig[0]["queriespath"];
+		$this->resultsPath=$pathConfig[0]["resultspath"];
+
+		mkdir($this->queryPath.$this->jobid);
+		
+	}
+
+	public function ResetJob()
+	{
+		$statusRunning=2;
+                $queryRunningQueries="SELECT id FROM blast_queries WHERE statusid=".$statusRunning." AND jobid=".$this->jobid;
+                if($sqlDataBase->countQuery($queryRunningQueries) == 0)
+                {
+                	$queryResetJobProgress = "UPDATE jobs SET queriescompleted=0 WHERE id=".$this->jobid;
+                        $queryDeleteJobResults = "DELETE FROM blast_results WHERE jobid=".$this->jobid."";
+                        $queryResetQueriesStatus = "UPDATE blast_queries SET reservenode=0, reservepid=0, statusid=1, starttime=NOW(), endtime=NOW() WHERE jobid=".$this->jobid;
+                        $queryDeleteJobResultsHits = "DELETE FROM blast_results_hits WHERE jobid=".$this->jobid."";
+
+			delTree($this->resultsPath."/".$this->jobid);			
+			
+                        $sqlDataBase->nonSelectQuery($queryDeleteJobResultsHits);
+                        $sqlDataBase->nonSelectQuery($queryResetJobProgress);
+                        $sqlDataBase->nonSelectQuery($queryDeleteJobResults);
+                        $sqlDataBase->nonSelectQuery($queryResetQueriesStatus);
+		
+			return true;
+                }
+                else {
+                        return false;
+                }
+	}
+
+	public function LoadJob($id)
+	{
+		$sql = "SELECT * FROM jobs WHERE id=".$id;
+		$jobInfoArray = $this->sqlDataBase->query($sql);
+		$this->jobid = $jobInfoArray[0]["id"];
+		$this->jobname = $jobInfoArray[0]["name"];
+		$this->userid = $jobInfoArray[0]["userid"];
+		
+		$queryPathConfig="SELECT queriespath,resultspath FROM config";
+                $pathConfig= $this->sqlDataBase->query($queryPathConfig);
+                $this->queryPath=$pathConfig[0]["queriespath"];
+                $this->resultsPath=$pathConfig[0]["resultspath"];
+	}
+	
+
+	public function AddQuery($inputp,$inputd,$sequence,$sequenceid,$inpute,$inputm,$inputFU,$inputGU,$inputEU,$inputXU,$inputIU,$inputq,$inputr,$inputv,$inputb,$inputf,$inputg,$inputQU,$inputDU,$inputa,$inputJU,$inputMU,$inputWU,$inputz,$inputKU,$inputYU,$inputSU,$inputTU,$inputl,$inputUU,$inputy,$inputZU,$inputRU,$inputn,$inputLU,$inputAU,$inputw,$inputt,$inputBU,$inputCU,$paramsEnabled)
+	{	
+		$newStatus = 1;
+		$sql = "INSERT INTO blast_queries (jobid,blastid,dbid,queryName,e,m,FU,GU,EU,XU,IU,q,r,v,b,f,g,QU,DU,a,JU,MU,WU,z,KU,YU,SU,TU,l,UU,y,ZU,RU,n,LU,AU,w,t,BU,CU,paramsenabled,statusid) VALUES (".$this->jobid.",".$inputp.",".$inputd.",\"".$sequenceid."\",".$inpute.",".$inputm.",\"".$inputFU."\",".$inputGU.",".$inputEU.",".$inputXU.",\"".$inputIU."\",".$inputq.",".$inputr.",".$inputv.",".$inputb.",".$inputf.",\"".$inputg."\",".$inputQU.",".$inputDU.",".$inputa.",\"".$inputJU."\",\"".$inputMU."\",\"".$inputWU."\",".$inputz.",".$inputKU.",".$inputYU.",".$inputSU.",".$inputTU.",\"".$inputl."\",\"".$inputUU."\",".$inputy.",".$inputZU.",\"".$inputRU."\",\"".$inputn."\",\"".$inputLU."\",".$inputAU.",".$inputw.",".$inputt.",".$inputBU.",\"".$inputCU."\",\"".$paramsEnabled."\",".$newStatus.")";
+		$queryId=$this->sqlDataBase->insertQuery($sql);
+		$sqlUpdateQueriesCount="UPDATE jobs SET queriesadded=queriesadded+1 WHERE id=".$this->jobid;
+		$this->sqlDataBase->nonSelectQuery($sqlUpdateQueriesCount);
+		
+		$queryFileHandle=fopen("/export".$this->queryPath.$this->jobid."/".$queryId.".fasta","w") or die("can't open file");
+		$query=chunk_split($sequence,50,"\n");
+		fwrite($queryFileHandle,">".$sequenceid."\n".$query);
+		fclose($queryFileHandle);
+		
+
+		return $sql;		
+	}
+	
+	function ClearAllQueries()
+	{
+		$sql = "DELETE FROM blast_queries WHERE jobid=".$this->jobid;
+		$this->sqlDataBase->nonSelectQuery($sql);
+	}
+
+	function UpdateJobProgress()
+	{
+
+	}
+	
+	function GetJobProgress()
+	{
+		
+	}
+	
+	private function delTree($dir) 
+	{
+    		$files = glob( $dir . '*', GLOB_MARK );
+    		foreach( $files as $file )
+		{
+        		if( substr( $file, -1 ) == '/' )
+            			$this->delTree( $file );
+        		else
+            			unlink( $file );
+    		}
+    		if (is_dir($dir)) rmdir( $dir );
+   
+	}	 
+
+}
+
+
+?>
