@@ -8,12 +8,27 @@ include "includes/txt2html.php";
 
 $statusDeleting=10;
 $statusCompleted=3;
-$queryJobsArray= "SELECT j.name,j.submitDate,j.completeDate,j.queriesadded,j.queriescompleted,j.id,j.status, s.name AS statusname, u.netid FROM blast_jobs j, users u, status s WHERE j.userid=u.id AND s.id=j.status AND j.status!=".$statusDeleting." ORDER BY id DESC";
+$queryJobsArray= "SELECT j.name,j.submitDate,j.completeDate,j.queriesadded,j.queriescompleted,j.id,j.status, s.name AS statusname, u.netid, j.priority FROM blast_jobs j, users u, status s WHERE j.userid=u.id AND s.id=j.status AND j.status!=".$statusDeleting." ORDER BY priority DESC,id ASC";
 $userJobsArray = $sqlDataBase->query($queryJobsArray);
 
 
 if(isset($_GET['action']))
 {
+	if($_GET['action']=='incprior')
+	{
+		$jobToInc = new Job($sqlDataBase);
+		$jobToInc->LoadJob($_GET['job']);
+		$jobToInc->SetPriority($jobToInc->GetPriority()+1);	
+	}
+	if($_GET['action']=='decprior')
+        {
+                $jobToDec = new Job($sqlDataBase);
+                $jobToDec->LoadJob($_GET['job']);
+		if(($jobToDec->GetPriority()-1)>=0)
+		{
+                	$jobToDec->SetPriority($jobToDec->GetPriority()-1);
+		}
+        }
 	if($_GET['action']=='delete')
 	{
 		$jobToDelete= new Job($sqlDataBase);
@@ -104,12 +119,20 @@ if(isset($_GET['action']))
 	
                 echo "</form>";
         }
-
+	
+	$queryJobsArray= "SELECT j.name,j.submitDate,j.completeDate,j.queriesadded,j.queriescompleted,j.id,j.status, s.name AS statusname, u.netid, j.priority FROM blast_jobs j, users u, status s WHERE j.userid=u.id AND s.id=j.status AND j.status!=".$statusDeleting." ORDER BY priority DESC,id ASC";
+	$userJobsArray = $sqlDataBase->query($queryJobsArray);
 
 }
 ?>
 <TABLE CELLPADDING="5" border=1>
 <tr>
+<th>
++/-
+</th>
+<th>
+<b>Priority</b>
+</th>
 <th>
 <b>Job ID</b>
 </th>
@@ -146,6 +169,8 @@ if($userJobsArray)
 	foreach($userJobsArray as $id=>$assoc)
 	{
 		echo "<tr>";
+		echo "<td><center><a href=\"admin.php?view=jobs&job=".$assoc['id']."&action=incprior\"><img src=\"images/plus-icon.png\"></a><a href=\"admin.php?view=jobs&job=".$assoc['id']."&action=decprior\"><image src=\"images/minus-icon.png\"></a> </center></td>";
+		echo "<td><center><b>".$assoc['priority']."</b></center>";
 		echo "<td>".$assoc['id']."</td>";
 		echo "<td>".$assoc['netid']."</td>";
 		echo "<td>".$assoc['name']."</td>";

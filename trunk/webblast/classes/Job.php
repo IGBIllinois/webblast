@@ -18,6 +18,9 @@ class Job
 	private $deletePid;
 	private $destPath;
 	private $chunkSize;
+	private $priority;
+	private $queriesAdded;
+	private $blastId;
 
 	public function __construct(SQLDataBase $sqlDataBase)
 	{	
@@ -100,7 +103,7 @@ class Job
 		$this->userid = $loggedUserid;
 		$this->chunkSize=$chunkSize;
 
-		$sql = "INSERT INTO blast_jobs (name,description,submitDate,userid,blastid,dbid,e,m,FU,GU,EU,XU,IU,q,r,v,b,f,g,QU,DU,a,JU,MU,WU,z,KU,YU,SU,TU,l,UU,y,ZU,RU,n,LU,AU,w,t,BU,CU,paramsenabled,status,chunksize) VALUES (\"".$this->jobname."\",\"".$this->description."\",NOW(),".$this->userid.",".$inputp.",".$inputd.",".$inpute.",".$inputm.",\"".$inputFU."\",".$inputGU.",".$inputEU.",".$inputXU.",\"".$inputIU."\",".$inputq.",".$inputr.",".$inputv.",".$inputb.",".$inputf.",\"".$inputg."\",".$inputQU.",".$inputDU.",".$inputa.",\"".$inputJU."\",\"".$inputMU."\",\"".$inputWU."\",".$inputz.",".$inputKU.",".$inputYU.",".$inputSU.",".$inputTU.",\"".$inputl."\",\"".$inputUU."\",".$inputy.",".$inputZU.",\"".$inputRU."\",\"".$inputn."\",\"".$inputLU."\",".$inputAU.",".$inputw.",".$inputt.",".$inputBU.",\"".$inputCU."\",\"".$paramsEnabled."\",".$statusNew.",".$chunkSize.")";
+		$sql = "INSERT INTO blast_jobs (name,description,submitDate,userid,blastid,dbid,e,m,FU,GU,EU,XU,IU,q,r,v,b,f,g,QU,DU,a,JU,MU,WU,z,KU,YU,SU,TU,l,UU,y,ZU,RU,n,LU,AU,w,t,BU,CU,paramsenabled,status,chunksize,priority) VALUES (\"".$this->jobname."\",\"".$this->description."\",NOW(),".$this->userid.",".$inputp.",".$inputd.",".$inpute.",".$inputm.",\"".$inputFU."\",".$inputGU.",".$inputEU.",".$inputXU.",\"".$inputIU."\",".$inputq.",".$inputr.",".$inputv.",".$inputb.",".$inputf.",\"".$inputg."\",".$inputQU.",".$inputDU.",".$inputa.",\"".$inputJU."\",\"".$inputMU."\",\"".$inputWU."\",".$inputz.",".$inputKU.",".$inputYU.",".$inputSU.",".$inputTU.",\"".$inputl."\",\"".$inputUU."\",".$inputy.",".$inputZU.",\"".$inputRU."\",\"".$inputn."\",\"".$inputLU."\",".$inputAU.",".$inputw.",".$inputt.",".$inputBU.",\"".$inputCU."\",\"".$paramsEnabled."\",".$statusNew.",".$chunkSize.",0)";
 
 		//$sql = "INSERT INTO jobs (name,description,submitDate,userid,progress) VALUES (\"".$this->jobname."\",\"".$this->description."\",NOW(),".$this->userid.",0)";
 		$this->jobid=$this->sqlDataBase->insertQuery($sql);
@@ -114,6 +117,20 @@ class Job
 		umask($oldUmask);	
 	}
 
+	public function SetPriority($priority)
+	{
+		$querySetJobPriority = "UPDATE blast_jobs SET priority=".$priority." WHERE id=".$this->jobid;
+		$this->sqlDataBase->nonSelectQuery($querySetJobPriority);
+		$querySetQueryPriority = "UPDATE blast_queries SET priority=".$priority." WHERE jobid=".$this->jobid;
+                $this->sqlDataBase->nonSelectQuery($querySetQueryPriority);
+		$this->priority=$priority;
+			
+	}
+
+	public function GetPriority()
+	{
+		return $this->priority;
+	}
 	public function ResetJob()
 	{
                 if($this->CheckNoRunningQueries())
@@ -170,6 +187,9 @@ class Job
 		$this->deletePid = $jobInfoArray[0]["deletepid"];
 		$this->csvConcatPid=$jobInfoArray[0]["concatpidcsv"];
 		$this->chunkSize=$jobInfoArray[0]["chunksize"];
+		$this->priority=$jobInfoArray[0]["priority"];
+		$this->queriesAdded=$jobInfoArray[0]["queriesadded"];
+		$this->blastId=$jobInfoArray[0]["blastid"];
 		$this->GetConfigValues();
 	}
 
@@ -281,6 +301,16 @@ class Job
 			return false;
 		}
 	
+	}
+	
+	public function GetQueriesAdded()
+	{
+		return $this->queriesAdded;
+	}
+
+	public function GetBlastId()
+	{
+		return $this->blastId;
 	}
 }
 

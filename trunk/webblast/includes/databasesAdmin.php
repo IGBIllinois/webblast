@@ -112,11 +112,14 @@ Database type:
 <b>Description</b>
 </th>
 <th>
+<b>Date</b>
+</th>
+<th>
 <b>Options</b>
 </th>
 </tr>
 <?php
-$queryDatabases="SELECT d.id,d.dbname,d.description,d.type,d.active,u.netid FROM dbs d, users u WHERE u.id=d.userid AND userid>0";
+$queryDatabases="SELECT d.id,d.dbname,d.description,d.type,d.active,u.netid,last_update FROM dbs d, users u WHERE u.id=d.userid AND userid>0";
 $databasesArray=$sqlDataBase->query($queryDatabases);
 
 foreach($databasesArray as $id=>$assoc)
@@ -126,6 +129,7 @@ foreach($databasesArray as $id=>$assoc)
 	echo "<td>".$assoc['dbname']."</td>";
 	echo "<td>".$assoc['type']."</td>";
 	echo "<td>".$assoc['description']."</td>";
+	echo "<td>".$assoc['last_update']."</td>";
 	echo "<td><a href=\"admin.php?view=databases&action=delete&dbid=".$assoc['id']."\">Delete</a> | ";
 	if($assoc['active']==1)
 	{
@@ -173,11 +177,14 @@ foreach($databasesArray as $id=>$assoc)
 <b>Description</b>
 </th>
 <th>
+<b>Updated</b>
+</th>
+<th>
 <b>Options</b>
 </th>
 </tr>
 <?php
-$queryDatabases="SELECT id,dbname,description,type,active FROM dbs WHERE userid=0";
+$queryDatabases="SELECT id,dbname,description,type,active,last_update FROM dbs WHERE userid=0";
 $databasesArray=$sqlDataBase->query($queryDatabases);
 
 foreach($databasesArray as $id=>$assoc)
@@ -186,6 +193,7 @@ foreach($databasesArray as $id=>$assoc)
         echo "<td>".$assoc['dbname']."</td>";
         echo "<td>".$assoc['type']."</td>";
         echo "<td>".$assoc['description']."</td>";
+	echo "<td>".$assoc['last_update']."</td>";
         echo "<td><a href=\"admin.php?view=databases&action=delete&dbid=".$assoc['id']."\">Delete</a> | ";
         if($assoc['active']==1)
         {

@@ -45,7 +45,7 @@ if(isset($_POST['submitDB']))
 			$dbCreateIndexes = "T";
 		}
 		echo "<br>";
-		Exec::run_in_background("scripts/addDatabase.pl ".$dbName." \"".$dbTitle."\" ".$dbType." ".$dbFile." ".$dbSeqId." ".$dbASNFormat." ".$dbASNMode." ".$dbInSeqEntry." ".$dbCreateIndexes." ".$dbTaxonomicInfo." ".$sqlDataBase->GetSqlUsername()." ".$sqlDataBase->GetSqlPassword()." ".$sqlDataBase->GetDatabase()." ".$userId > addDatabase.log);	
+		Exec::run_in_background("scripts/addDatabase.pl ".$dbName." \"".$dbTitle."\" ".$dbType." ".$dbFile." ".$dbSeqId." ".$dbASNFormat." ".$dbASNMode." ".$dbInSeqEntry." ".$dbCreateIndexes." ".$dbTaxonomicInfo." ".$sqlDataBase->GetSqlUsername()." ".$sqlDataBase->GetSqlPassword()." ".$sqlDataBase->GetDatabase()." ".$userId." > addDatabase.log");	
 		echo "<br><table border=1><tr><td><center><FONT COLOR=\"green\">Database submitted!<br>You will recieve an e-mail when the database is ready for use on the cluster or incase of a failure.<br><br>>>DO NOT HIT REFRESH OR YOUR DATABASE WILL RESUBMIT<<</FONT></center></td></tr></table>";
 
         }

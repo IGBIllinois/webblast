@@ -2,7 +2,7 @@
 include "includes/txt2html.php";
 
 $statusDeleting=10;
-$queryJobsArray= "SELECT j.name,j.submitDate,j.completeDate,j.queriesadded,j.queriescompleted,j.id,j.status, s.name AS statusname FROM blast_jobs j, users u, status s WHERE u.netid=\"".$_SESSION['username']."\" AND j.userid=u.id AND s.id=j.status AND j.status!=".$statusDeleting." ORDER BY id DESC";
+$queryJobsArray= "SELECT j.name,j.submitDate,j.completeDate,j.queriesadded,j.queriescompleted,j.id,j.status, s.name AS statusname,j.priority FROM blast_jobs j, users u, status s WHERE u.netid=\"".$_SESSION['username']."\" AND j.userid=u.id AND s.id=j.status AND j.status!=".$statusDeleting." ORDER BY id DESC";
 $userJobsArray = $sqlDataBase->query($queryJobsArray);
 $statusCompleted=3;
 
@@ -11,6 +11,62 @@ if(isset($_GET['action']))
    $queryJobPermission = "SELECT u.netid FROM blast_jobs j, users u WHERE j.id=".$_GET['job']." AND j.userid=u.id AND u.netid=\"".$_SESSION['username']."\"";
    if($sqlDataBase->countQuery($queryJobPermission) > 0 )
    {
+	if($_GET['action']=='incprior')
+        {
+                $jobToInc = new Job($sqlDataBase);
+                $jobToInc->LoadJob($_GET['job']);
+		$blastnId = 1;
+		if( ((($jobToInc->GetQueriesAdded() < 10000 && $jobToInc->GetBlastId()==$blastnId) || ($jobToInc->GetQueriesAdded() < 4000 && $jobToInc->GetBlastId()!= $blastnId)) && $jobToInc->GetPriority()<1) 
+			|| ((($jobToInc->GetQueriesAdded() < 1000 && $jobToInc->GetBlastId()==$blastnId) || ($jobToInc->GetQueriesAdded() < 400 && $jobToInc->GetBlastId()!= $blastnId)) && $jobToInc->GetPriority()<2)  )
+		{
+                	$jobToInc->SetPriority($jobToInc->GetPriority()+1);
+		}
+		else
+		{
+			echo "<br>
+				<table>
+				<tr>
+					<td colspan=3><center><b>Priority Rules</b></center></td>
+				</tr>
+				<tr>
+					<td><b>Priority #</b></td>
+					<td><b># Queries</b></td>
+					<td><b>Program</b></td>
+				</tr>
+				<tr>
+					<td>1</td>
+					<td><10000</td>
+					<td>BLASTN</td>
+				</tr>
+				<tr>
+                                        <td>1</td>
+                                        <td><4000</td>
+                                        <td>BLASTX,BLASTP,TBLASTN,TBLASTX</td>
+                                </tr>	
+				<tr>
+                                        <td>2</td>
+                                        <td><1000</td>
+                                        <td>BLASTN</td>
+                                </tr>
+                                <tr>
+                                        <td>2</td>
+                                        <td><400</td>
+                                        <td>BLASTX,BLASTP,TBLASTN,TBLASTX</td>
+                                </tr>
+				</table><br><br>";
+		}
+        }
+
+        if($_GET['action']=='decprior')
+        {
+                $jobToDec = new Job($sqlDataBase);
+                $jobToDec->LoadJob($_GET['job']);
+                if(($jobToDec->GetPriority()-1)>=0)
+                {
+                        $jobToDec->SetPriority($jobToDec->GetPriority()-1);
+                }
+        }
+
 	if($_GET['action']=='delete')
 	{
 		$jobToDelete= new Job($sqlDataBase);
@@ -112,15 +168,23 @@ if(isset($_GET['action']))
                 echo "</table>";
 
                 echo "</form>";
-        }	
+        }
+	$queryJobsArray= "SELECT j.name,j.submitDate,j.completeDate,j.queriesadded,j.queriescompleted,j.id,j.status, s.name AS statusname,j.priority FROM blast_jobs j, users u, status s WHERE u.netid=\"".$_SESSION['username']."\" AND j.userid=u.id AND s.id=j.status AND j.status!=".$statusDeleting." ORDER BY id DESC";
+	$userJobsArray = $sqlDataBase->query($queryJobsArray);
+	
    }	
 }
 ?>
-<a href="index.php?view=jobs">Click To Refresh Jobs</a>
-<br>
-<br>
+<a href="index.php?view=jobs">Click To Refresh Jobs</a><br><br>
+Use the +/- sign to increase/decrease a job's priority.
 <TABLE CELLPADDING="5" border=1>
 <tr>
+<th>
++/-
+</th>
+<th>
+<b>Priority</b>
+</th>
 <th>
 <b>Job ID</b>
 </th>
@@ -152,6 +216,8 @@ if($userJobsArray)
 	foreach($userJobsArray as $id=>$assoc)
 	{
 		echo "<tr>";
+		echo "<td><center><a href=\"index.php?view=jobs&job=".$assoc['id']."&action=incprior\"><img src=\"images/plus-icon.png\"></a><a href=\"index.php?view=jobs&job=".$assoc['id']."&action=decprior\"><image src=\"images/minus-icon.png\"></a> </center></td>";
+                echo "<td><center><b>".$assoc['priority']."</b></center>";
 		echo "<td>".$assoc['id']."</td>";
 		echo "<td>".$assoc['name']."</td>";
 		echo "<td>".$assoc['submitDate']."</td>";

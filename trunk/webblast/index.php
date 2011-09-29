@@ -19,7 +19,8 @@ if(isset($_SESSION['username']) && isset($_SESSION['password']))
 	if($authen->Authenticate($_SESSION['username'],$_SESSION['password'],""))
 	{
 		include "includes/logout.php";
-		echo "<font color=\"red\"><b></b></font><br><br>";
+		echo "<font color=\"blue\"><b>You may now increase/decrease your job's priority using the +/- signs under the View Jobs tab. 
+<br>This feature is best used when your job is small and there are very large jobs ahead of it in the queue.</b></font><br><br>";
 		include "includes/ncbiLastUpdate.php";
 		include "includes/navigation.php";
 		if(isset($_GET['view']))

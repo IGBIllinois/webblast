@@ -138,7 +138,7 @@ sub RunBlastJob {
 	$blastData = "";
 
 	#Reserve a query for this process
-	$queryReserveQuery ="UPDATE blast_queries SET reservenode=$nodeNumber, reservepid=$$ WHERE statusid=$statusNew AND reservenode=0 AND reservepid=0 LIMIT 1";
+	$queryReserveQuery ="UPDATE blast_queries SET reservenode=$nodeNumber, reservepid=$$ WHERE statusid=$statusNew AND reservenode=0 AND reservepid=0 ORDER BY priority DESC LIMIT 1";
 	$sthc         = $dbhc->prepare($queryReserveQuery);
 	$rowsAffected = $sthc->execute();
 	if ( $rowsAffected > 0 ) {

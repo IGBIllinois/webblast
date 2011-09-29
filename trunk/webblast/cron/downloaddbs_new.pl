@@ -50,18 +50,22 @@ my $db = "blastWeb";
 
 my $try=0;
 my $ftp;
-my $maxTries=4;
+my $maxTries=5;
+
+#Destinations directories
+#########################
+#paths on head node
 my $extractDestination="/export/home/blastdbs/ncbi_archive_test";
 my $compressedDownloads = "/export/home/blastdbs/ncbi_compressed";
-my $slaveDestination = "/state/partition1/rsyncdbs/";
 my $userDbsSource = "/export/home/blastdbs/userdbs";
-
+#paths on slave nodes
 my $slaveBackupdbs = "/state/partition1/backupdbs/";
 my $slaveRsyncdbs = "/state/partition1/rsyncdbs/";
 my $slaveBlastdbs = "/state/partition1/blastdbs/";
 
 my $errorDetails="";
 my $fileStatus=1;
+my $errorOccured=0;
 my @extractedDbFiles;
 my $count;
 my $forkMoveDetails;
@@ -78,6 +82,9 @@ my %ncbiDbs;
 	@filesToDownload = sort(@filesToDownload);
 	
 	my $dbFile;
+
+	#Lets create a nice organized hash of all dbs and their related file parts
+	##########################################################################
 	foreach $dbFile (@filesToDownload)
 	{
 		my $dbName = fileparse($dbFile,@suffix);
@@ -126,9 +133,12 @@ my %ncbiDbs;
 		foreach $filePart (@{ $ncbiDbs{$shortNameDb} })
 		{
 			my $file = $shortNameDb.$filePart.".tar.gz";
-
+			$try = 0;
 			if($fileStatus!=0)
-			{
+			{	
+				#main loop to download dbs, check md5 sum and extract tar gz
+				#if all goes well then move on to next step if not then try again until max tries is reached.
+				#############################################################################################
 				do {
 					$fileStatus=1;
 					print "\nfile to download: ".$file."\n";
@@ -143,7 +153,7 @@ my %ncbiDbs;
 						
 	       				        ($ftpMD5,$fileName) = split(/ +/,$md5line);
 	       				       	my $actualMD5=md5sum($file);
-	
+						print "\nMD5 File:".$actualMD5." MD5 Expected:".$ftpMD5;	
 						#Compare MD5 checksums of file to NCBI available checksum
 				                if($actualMD5 eq  $ftpMD5 or is_exception($file))
 						{
@@ -167,7 +177,7 @@ my %ncbiDbs;
 						}else{
 							$fileStatus=0;
 	                                                unlink($file);
-							$errorDetails=$errorDetails."Error matching MD5 ".$file;
+							$errorDetails=$errorDetails."\nError matching MD5 ".$file." try(".$try.")";
 						}
 					}else{
 						unlink($file);
@@ -178,17 +188,19 @@ my %ncbiDbs;
 					$try=$try+1;
 				}while($fileStatus == 0 and $try < $maxTries);			
 	
+				#Rsync the databse file parts to the temporary rsync directory on each node
+				###########################################################################
 				if($fileStatus==1)
 				{
 					if($shortNameDb)
 					{
 						for($count=0;$count<=$numNodes;$count++)
        	         				{
-							print "\nrsync -au ".$extractDestination."/".$shortNameDb.$filePart."* ".$commonNodeName.$count.":".$slaveDestination;
-	                        			if(system("rsync -au ".$extractDestination."/".$shortNameDb.$filePart."* ".$commonNodeName.$count.":".$slaveDestination) != 0)
+							print "\nrsync -au ".$extractDestination."/".$shortNameDb.$filePart."* ".$commonNodeName.$count.":".$slaveRsyncdbs;
+	                        			if(system("rsync -au ".$extractDestination."/".$shortNameDb.$filePart."* ".$commonNodeName.$count.":".$slaveRsyncdbs) != 0)
 	                        			{
 	                                			$fileStatus=0;
-	                                			$errorDetails=$errorDetails."\nFailed to rsync ncbi archive ".$commonNodeName.$count;
+	                                			$errorDetails=$errorDetails."\nFailed to rsync ".$shortNameDb.$filePart."* ncbi archive ".$commonNodeName.$count;
 	                               		 		print "\nFailed to rsync ncbi archive ".$commonNodeName.$count;
        	                 				}
        	         				}
@@ -196,6 +208,31 @@ my %ncbiDbs;
 				}
 			}
 		}
+		#rsync the nal and pal files
+		#####################################################
+		if($fileStatus == 1)
+		{
+			if($shortNameDb)
+                        {
+				for($count=0;$count<=$numNodes;$count++)
+                                {
+                                	print "\nrsync -au ".$extractDestination."/".$shortNameDb."*.*al ".$commonNodeName.$count.":".$slaveRsyncdbs;
+                                	if(system("rsync -au ".$extractDestination."/".$shortNameDb.".*al ".$commonNodeName.$count.":".$slaveRsyncdbs) != 0)
+                                	{
+						if((-e $extractDestination."/".$shortNameDb.".nal")||(-e $extractDestination."/".$shortNameDb.".pal"))
+						{ 
+                                	        	$fileStatus=0;
+							$errorDetails=$errorDetails."\nFailed to rsync ".$shortNameDb.".*al  ncbi archive ".$commonNodeName.$count;
+                                                	print "\nFailed to rsync file types to ncbi archive ".$commonNodeName.$count;
+						}
+                                	}
+				}
+			}
+		}
+		
+		#Check if jobs are using this database
+		#if not then remove the database from the db directory and mv the new dbs from the rsync directory
+		########################################################################################################
 		if($fileStatus == 1)
                	{
                    	if($shortNameDb)
@@ -206,17 +243,27 @@ my %ncbiDbs;
                                      	sleep(5);
                               	}
 				
-                              	print "rocks run host compute \"rm -f ".$slaveBlastdbs.$shortNameDb.".*";
-                            	$forkMoveDetails = system("rocks run host compute \"rm -f ".$slaveBlastdbs.$shortNameDb.".*");
-                             	print "\nrocks run host compute \"mv -f ".$slaveRsyncdbs.$shortNameDb."* ".$slaveBlastdbs."\"\n";
-                             	$forkMoveDetails = system("rocks run host compute \"mv -f ".$slaveRsyncdbs.$shortNameDb.".* ".$slaveBlastdbs."\"");
+                              	print "/opt/rocks/bin/tentakel -g compute \"rm -f ".$slaveBlastdbs.$shortNameDb.".*\"";
+                            	$forkMoveDetails = system("/opt/rocks/bin/tentakel -g compute \"rm -f ".$slaveBlastdbs.$shortNameDb.".*\"");
+                             	print "/opt/rocks/bin/tentakel -g compute \"mv -f ".$slaveRsyncdbs.$shortNameDb."* ".$slaveBlastdbs."\"\n";
+                             	$forkMoveDetails = system("/opt/rocks/bin/tentakel -g compute \"mv -f ".$slaveRsyncdbs.$shortNameDb.".* ".$slaveBlastdbs."\"");
 				
 				UpdateDbDate($shortNameDb);
                     	}
            	}
+		else
+		{
+			if($shortNameDb)
+			{
+				print "/opt/rocks/bin/tentakel -g compute \"rm -f ".$slaveRsyncdbs.$shortNameDb.".*\"";
+                                $forkMoveDetails = system("/opt/rocks/bin/tentakel -g compute \"rm -f ".$slaveRsyncdbs.$shortNameDb.".*\"");
+				$fileStatus=1;
+				$errorOccured=0;
+			}
+		}
 	   }	
 	}	
-	if($fileStatus==0)
+	if($errorOccured)
 	{
 		my $statusError = 7;
 		UpdateStatus($statusError);
@@ -315,14 +362,27 @@ sub get_files_to_download
 sub download
 {
     my $dlFile = shift;
+    my $success;
     $ftp = &connect_to_ftp();
     print STDERR "\nMD5 DB ".$ftp->mdtm($dlFile."\.md5")." ".$ftp->mdtm($dlFile);
     if (not -f $dlFile or ((stat($dlFile))->mtime < $ftp->mdtm($dlFile))) {
-    	print STDERR "Downloading $dlFile...\n ";
+    	print STDERR "\nDownloading $dlFile...\n ";
 	if(abs($ftp->mdtm($dlFile."\.md5")-$ftp->mdtm($dlFile)) < 3600)
 	{
 		print STDERR "\nMD5 file found on NCBI for $dlFile";
-		$ftp->get($dlFile."\.md5");
+		$success = 0;
+		while(!$success)
+		{
+			eval{
+				$ftp->get($dlFile."\.md5");
+				$success = 1;
+			};
+			if($@)
+			{
+				sleep(60);
+			}
+			
+		}
 	}
 	else
 	{
