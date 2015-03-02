@@ -1,0 +1,6 @@
+
+CRONTAB COMMAND RUN WEBBLAST SCHEDULER
+*/5 * * * * blastweb /home/a-m/blastweb/head_cron/headcron.sh >> /home/a-m/blastweb/head_cron.log 2>&1
+
+CRONTAB COMMAND RUN WEBBLAST DATABASE UPDATE
+0 22 * * * blastweb /home/a-m/blastweb/head_cron/headcron_updatedb.sh >> /home/a-m/blastweb/head_cron.log 2>&1
