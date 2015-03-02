@@ -48,6 +48,11 @@ class Job
 	{
 	}
 
+    /**
+     * Delete the currently loaded job
+     * verify job is not currently running prior to deleting
+     * also verify that that job is not being processed at the moment.
+     */
 	public function DeleteJob()
 	{
 		if($this->CheckNoRunningQueries())
@@ -97,6 +102,9 @@ class Job
 		}
 	}
 
+    /**
+     * Cancel a job, marks all queries as canceled so that worker nodes do not try to run them
+     */
 	public function CancelJob()
 	{
 		$statusCanceled = 4;
@@ -105,8 +113,12 @@ class Job
                 $statusNew=1;
                 $queryCancelAllNonRunnigQueries="UPDATE blast_queries SET statusid=".$statusCanceled." WHERE statusid=".$statusNew." AND jobid=".$this->jobid;
                 $this->sqlDataBase->nonSelectQuery($queryCancelAllNonRunnigQueries);
-	}	
+	}
 
+    /**
+     * Resume a job, set all queries which are not complete or failed to new
+     * this way the worker nodes will start to pick them up
+     */
 	public function ResumeJob()
 	{
 		$statusCanceled = 4;
@@ -116,7 +128,52 @@ class Job
                 $queryCancelAllNonRunnigQueries="UPDATE blast_queries SET statusid=".$statusNew." WHERE statusid=".$statusCanceled." AND jobid=".$this->jobid;
                 $this->sqlDataBase->nonSelectQuery($queryCancelAllNonRunnigQueries);
 	}
-	
+
+    /**Create a new job with all of the blastall parameters
+     * I should have created an array instead of having this many inputs to the function argh dumb dumb dumb...
+     * @param $newJobName
+     * @param $loggedUserid
+     * @param $inputp
+     * @param $inputd
+     * @param $inpute
+     * @param $inputm
+     * @param $inputFU
+     * @param $inputGU
+     * @param $inputEU
+     * @param $inputXU
+     * @param $inputIU
+     * @param $inputq
+     * @param $inputr
+     * @param $inputv
+     * @param $inputb
+     * @param $inputf
+     * @param $inputg
+     * @param $inputQU
+     * @param $inputDU
+     * @param $inputa
+     * @param $inputJU
+     * @param $inputMU
+     * @param $inputWU
+     * @param $inputz
+     * @param $inputKU
+     * @param $inputYU
+     * @param $inputSU
+     * @param $inputTU
+     * @param $inputl
+     * @param $inputUU
+     * @param $inputy
+     * @param $inputZU
+     * @param $inputRU
+     * @param $inputn
+     * @param $inputLU
+     * @param $inputAU
+     * @param $inputw
+     * @param $inputt
+     * @param $inputBU
+     * @param $inputCU
+     * @param $paramsEnabled
+     * @param $chunkSize
+     */
 	public function CreateJob($newJobName,$loggedUserid,$inputp,$inputd,$inpute,$inputm,$inputFU,$inputGU,$inputEU,$inputXU,$inputIU,$inputq,$inputr,$inputv,$inputb,$inputf,$inputg,$inputQU,$inputDU,$inputa,$inputJU,$inputMU,$inputWU,$inputz,$inputKU,$inputYU,$inputSU,$inputTU,$inputl,$inputUU,$inputy,$inputZU,$inputRU,$inputn,$inputLU,$inputAU,$inputw,$inputt,$inputBU,$inputCU,$paramsEnabled,$chunkSize)
 	{
 		$statusNew=1;
@@ -137,6 +194,9 @@ class Job
 		umask($oldUmask);	
 	}
 
+    /**Set job priority so workers will pick up them up first
+     * @param $priority
+     */
 	public function SetPriority($priority)
 	{
 		$querySetJobPriority = "UPDATE blast_jobs SET priority=".$priority." WHERE id=".$this->jobid;
@@ -147,10 +207,17 @@ class Job
 			
 	}
 
+    /**Get the job priority
+     * @return mixed
+     */
 	public function GetPriority()
 	{
 		return $this->priority;
 	}
+
+    /** Reset job by reseting all queries to new forcing worker nodes to rerun all queries for this job
+     * @return bool
+     */
 	public function ResetJob()
 	{
                 if($this->CheckNoRunningQueries())
@@ -179,7 +246,11 @@ class Job
                         print "<FONT COLOR=\"red\">Can't delete job while queries are running. <br>Please cancel first and wait for running queries to finish</FONT>";
                 }
 	}
-	
+
+    /**Reset a single query chunk in order to froce nodes to rerun it.
+     * Useful if a node crashes and the query is marked as failed.
+     * @param $queryid
+     */
 	public function ResetQuery($queryid)
 	{
 		$statusNew=1;
@@ -194,6 +265,9 @@ class Job
 
 	}
 
+    /**Load job details from database into this object
+     * @param $id
+     */
 	public function LoadJob($id)
 	{
 		$sql = "SELECT * FROM blast_jobs WHERE id=".$id;
@@ -214,6 +288,9 @@ class Job
 		$this->numchunks=$jobInfoArray[0]["numchunks"];
 	}
 
+    /**
+     * Transfer results to user's dropbox
+     */
 	public function TransferToDropBox()
 	{
 
@@ -240,7 +317,13 @@ class Job
 			echo "<FONT COLOR=\"red\">The drop box path does not exist (".$userDropBoxPath.")<br>Please contact your system admin for assistance.</FONT>";
 		}
 	}
-	
+
+    /**User scp to transfer job to another computer
+     * @param $host
+     * @param $path
+     * @param $username
+     * @param $password
+     */
 	public function SCPJob($host,$path,$username,$password)
 	{
 		$statusTransfering=9;
@@ -256,6 +339,10 @@ class Job
 
 	}
 
+    /**if the fasta file is bigger than 2GB then allow the user to give a URL from where webblast can download it.
+     * @param $url
+     * @return bool
+     */
 	public function GetQueriesFromURL($url)
         {
                 //Check if the file exists at the url before trying to fetch it
@@ -275,6 +362,7 @@ class Job
 
         }
 
+
         public function GetQueriesFromFile($tempFilePost)
         {
 		echo "Uploaded file";
@@ -291,6 +379,9 @@ class Job
                 return false;
         }
 
+    /**
+     * Use the fasta parser script to add queries to database for this job from an uploaded file
+     */
 	public function AddQueries()
 	{
 		if($this->tempFilePost)
@@ -304,13 +395,20 @@ class Job
 		$queryUpdateJobPID="UPDATE blast_jobs SET submitpid=".$ps." WHERE id=".$this->jobid;
 		$this->sqlDataBase->nonSelectQuery($queryUpdateJobPID);
 	}
-	
+
+    /**
+     * Delete all queries for this job from database
+     */
 	function ClearAllQueries()
 	{
 		$sql = "DELETE FROM blast_queries WHERE jobid=".$this->jobid;
 		$this->sqlDataBase->nonSelectQuery($sql);
 	}
 
+    /**Concatinate CSV chunk results together
+     * @param $netid
+     * @param $destinationPath
+     */
 	function ConcatCSV($netid,$destinationPath)
 	{
 		$ps=Exec::run_in_background($this->perlPath." scripts/concat.pl ".$this->jobid." ".$netid." ".$this->csvPath." ".$destinationPath." csv");
@@ -329,16 +427,28 @@ class Job
                 $ps=Exec::run_in_background($this->perlPath." scripts/concat.pl ".$this->jobid." ".$netid." ".$this->queryPath." ".$destinationPath." fasta");
         }
 
+    /**Delete all job files
+     * @param $dir
+     * @param int $mkdir
+     * @param $type
+     */
 	private function delTree($dir,$mkdir=0,$type) 
 	{
 		$ps=Exec::run_in_background($this->perlPath." scripts/deleteFolder.pl ".$dir." ".$this->deletePath." ".$this->jobid. " ".$mkdir." ".$type);
 	}
 
+    /**Delete a file
+     * @param $dir
+     * @param $filename
+     */
 	private function delFile($dir,$filename)
 	{
 		$ps=Exec::run_in_background("rm -f ".$dir.$filename);
-	}	
-	
+	}
+
+    /**get all configuration values for job from centralized configuration file
+     * @param $config_array
+     */
 	private function GetConfigValues($config_array)
 	{
                 $this->queryPath=$config_array['head_paths']['query_chunks_path'];
@@ -352,7 +462,10 @@ class Job
 		$this->uploadPath=$config_array['head_paths']['php_upload_dir'];
 
 	}
-	
+
+    /**Check if there are any running queries for this job
+     * @return bool
+     */
 	private function CheckNoRunningQueries()
 	{
 		$statusRunning=2;
@@ -365,19 +478,30 @@ class Job
 		}
 	
 	}
-	
+
+    /**Get a query string from job
+     * @param $queryId
+     * @return array
+     */
 	public function GetQueryString($queryId)
 	{
 		$queryContents=file($this->queryPath.$this->jobid."/".$queryId.".fasta");
 		return $queryContents;
 	}
-	
+
+    /**Get a result string for this job
+     * @param $resultsId
+     * @return array
+     */
 	public function GetResultsString($resultsId)
 	{
 		$resultsContents=file($this->resultsPath.$this->jobid."/".$resultsId.".result");
                 return $resultsContents;
 	}
-	
+
+    /**Get the results file path for this job
+     * @return string
+     */
 	public function GetResultsFilePath()
 	{
 		$queryUserName = "SELECT netid FROM users WHERE id=".$this->userid;
@@ -387,8 +511,11 @@ class Job
 			$resultsFilePath = $this->finalizePath.$userName."_".$this->jobid.".result";
 			return $resultsFilePath;
 		}
-	}	
+	}
 
+    /**Get a CSV results file path
+     * @return string
+     */
 	public function GetCSVResultsFilePath()
 	{
 		$queryUserName = "SELECT netid FROM users WHERE id=".$this->userid;
@@ -400,6 +527,7 @@ class Job
                 }
 	}
 
+    //Getters and Setters
 	public function GetQueriesAdded()
 	{
 		return $this->queriesAdded;

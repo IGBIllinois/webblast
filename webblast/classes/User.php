@@ -20,6 +20,13 @@ class User
 
 	}
 
+    /**Create a new user in database
+     * @param $netid
+     * @param $first
+     * @param $last
+     * @param $email
+     * @return int
+     */
 	public function CreateUser($netid,$first,$last,$email)
 	{
 		$queryInsertNewUser = "INSERT INTO users (netid,first,last,email,auth_token)VALUES(\"".$netid."\",\"".$first."\",\"".$last."\",\"".$email."\",MD5(RAND()))";
@@ -38,6 +45,10 @@ class User
 
 	}
 
+    /**Load user information from database
+     * @param $userId
+     * @return bool
+     */
 	public function LoadUser($userId)
 	{
 		$queryUserInfo = "SELECT netid,first,last,email,auth_token FROM users WHERE id=".$userId;
@@ -59,6 +70,9 @@ class User
 		}		
 	}
 
+    /**
+     * Update user's authentication token
+     */
 	public function UpdateAuthToken()
 	{
 		$queryUpdateAuthToken = "UPDATE users SET auth_token=MD5(RAND()) WHERE id=".$this->userId;
@@ -66,12 +80,19 @@ class User
 		$this->LoadUser($this->userId);
 	}
 
+    /**
+     * Update user info if changed through getters and setters
+     */
 	public function UpdateUserInfo()
 	{
 		$queryUpdateUserInfo = "UPDATE users SET first=\"".$this->first."\",last=\"".$this->last."\",email=\"".$this->email."\" WHERE id=".$this->userId;
 		$this->sqlDataBase->nonSelectQuery($queryUpdateUserInfo);
 	}
-	
+
+    /**Return a database row id for user from a username string
+     * @param $netid
+     * @return string
+     */
 	public function GetUserIdFromNetid($netid)
 	{
 		$queryUserId = "SELECT id FROM users WHERE netid=\"".$netid."\"";
