@@ -31,14 +31,24 @@ class Auth
 
 	public function AuthSession()
 	{
+		if(isset($_SESSION['user_token']) && isset($_SESSION['username']))
+		{
+			if($this->AuthUserToken($_SESSION['username'], $_SESSION['user_token']))
+			{
+				echo "Token Match";
+				return 1;
+			}
+		}
+		/*
 		if(isset($_SESSION['username']) && isset($_SESSION['password']))
 		{
 			if($this->AuthLogin($_SESSION['username'],$_SESSION['password']))
 			{
+				echo "Login Match";
 				return 1;
 			}
 		}
-		
+		*/
 		$this->UnsetSession();
 
 		return 0;
@@ -83,6 +93,20 @@ class Auth
 	{
 		$this->UnsetSession();
 	}
+
+	public function AuthUserToken($username,$sessionToken)
+	{
+		$this->authUser = new User($this->sqlDataBase);
+		$userId = $this->authUser->GetUserIdFromNetid($username);
+		$this->authUser->LoadUser($userId);
+		if($this->authUser->getAuthToken() == $sessionToken)
+		{
+			$_SESSION['username']=$username;
+			$_SESSION['userid']=$userId;
+			$_SESSION['auth_token']=$sessionToken;
+			return 1;
+		}
+	}	
 
 	public function AuthLdap($username,$password,$group="")
 	{
@@ -134,22 +158,25 @@ class Auth
 		return 0;
 	}
 	
-	public function CreateSession($username,$password,$group)
+	public function CreateSession($username,$password,$group=0)
 	{
 		$_SESSION['username']=$username;
-		$_SESSION['password']=$password;
+		//$_SESSION['password']=$password;
 		$_SESSION['group']=$group;
-		$this->authUser = new User($this->sqlDataBase);
+		$this->authUser = new User($this->sqlDataBase);	
 		$userId = $this->authUser->GetUserIdFromNetid($username);
 		if($userId)
 		{
 			$this->authUser->LoadUser($userId);
+			$this->authUser->UpdateAuthToken();
+			$_SESSION['user_token'] = $this->authUser->getAuthToken();
 			$_SESSION['userid']=$userId;	
 		}
 		else
 		{
 			echo "create user";
 			$userId = $this->authUser->CreateUser($username,"","",$username."@igb.illinois.edu");
+			$_SESSION['user_token'] = $this->authUser->getAuthToken();
 			$_SESSION['userid']=$userId;
 				
 		}	
@@ -158,9 +185,10 @@ class Auth
 	public function UnsetSession()
 	{
 		unset($_SESSION['username']);
-		unset($_SESSION['password']);
+		//unset($_SESSION['password']);
 		unset($_SESSION['userid']);
 		unset($_SESSION['group']);
+		unset($_SESSION['user_token']);
 	}
 
 	public function GetAuthUser()
