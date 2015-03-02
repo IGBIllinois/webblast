@@ -1,0 +1,5 @@
+Can't load '/home/apps/perl/perl-5.16.1/lib/site_perl/5.16.1/x86_64-linux/auto/DBI/DBI.so' for module DBI: /home/apps/perl/perl-5.16.1/lib/site_perl/5.16.1/x86_64-linux/auto/DBI/DBI.so: undefined symbol: PL_phase at /opt/perl/lib/5.14.2/x86_64-linux-thread-multi/DynaLoader.pm line 190.
+ at /home/apps/perl/perl-5.16.1/lib/site_perl/5.16.1/x86_64-linux/DBI.pm line 266
+BEGIN failed--compilation aborted at /home/apps/perl/perl-5.16.1/lib/site_perl/5.16.1/x86_64-linux/DBI.pm line 266.
+Compilation failed in require at /home/a-m/blastweb/slave_scripts/slave_script.pl line 12.
+BEGIN failed--compilation aborted at /home/a-m/blastweb/slave_scripts/slave_script.pl line 12.
