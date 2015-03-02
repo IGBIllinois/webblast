@@ -36,7 +36,10 @@ class Database
 	{
 
 	}
-	
+
+    /**Load blast database information form webblast mysql database
+     * @param $databaseId
+     */
 	public function LoadDatabase($databaseId)
 	{
 		$queryDatabase = "SELECT * FROM dbs WHERE id=".$databaseId;
@@ -53,6 +56,13 @@ class Database
 		}
 	}
 
+    /**Create a new database in mysql webblast
+     * @param $description
+     * @param $status
+     * @param $type
+     * @param $userid
+     * @return bool
+     */
 	public function CreateDatabase($description,$status,$type,$userid)
 	{
 		$typeDescription = ($type=="F")?"n":"p";
@@ -77,6 +87,9 @@ class Database
 		}
 	}
 
+    /**
+     * Update database in mysql webblast
+     */
 	public function UpdateDatabase()
 	{
 		$queryUpdateDatabase = "UPDATE dbs SET dbname=\"".$this->databaseName."\",
@@ -86,8 +99,11 @@ class Database
 						type=\"".$this->type."\",
 					WHERE id=".$this->databaseId;
 		$this->sqlDatabase->nonSelectQuery($queryUpdateDatabase);	
-	}	
+	}
 
+    /**
+     * Delete the database from mysql webblast and blast database from directory
+     */
 	public function DeleteDatabase()
 	{
 		if($this->databaseName!="")
@@ -109,7 +125,10 @@ class Database
 		}
 		
 	}
-	
+
+    /**Get standard configuration values for creating a blast database
+     * @param $config_array
+     */
 	public function GetConfigurationValues($config_array)
 	{
 		$this->userDatabasePath = $config_array['head_paths']['databases_path']."USER/";
@@ -117,6 +136,10 @@ class Database
 		$this->configPerlPath = $config_array['perl_bin']['perl_bin_path'];
 	}
 
+    /**If database bigger than 2GB then use wget to get database from another location
+     * @param $url
+     * @return bool
+     */
 	public function GetDatabaseFromURL($url)
 	{
 		//Check if the file exists at the url before trying to fetch it
@@ -136,6 +159,10 @@ class Database
 		
 	}
 
+    /**Get the database from an uploaded file if database was uploaded via post
+     * @param $tempFilePost
+     * @return bool
+     */
 	public function GetDatabaseFromFile($tempFilePost)
 	{
 		if(is_uploaded_file($tempFilePost))
@@ -149,6 +176,14 @@ class Database
 		return false;
 	}
 
+    /**Compile database using blastall formatdb
+     * @param $dbSeqId
+     * @param $dbASNFormat
+     * @param $dbASNMode
+     * @param $dbInSeqEntry
+     * @param $dbCreateIndexes
+     * @param $dbTaxonomicInfo
+     */
 	public function CompileDatabase($dbSeqId,$dbASNFormat,$dbASNMode,$dbInSeqEntry,$dbCreateIndexes,$dbTaxonomicInfo)
 	{
 		echo $this->configPerlPath." scripts/addDatabase.pl ".$this->databaseName." \"".$this->description."\" ".$this->type." ".$this->userDatabasePath.$this->databaseName." ".$dbSeqId." ".$dbASNFormat." ".$dbASNMode." ".$dbInSeqEntry." ".$dbCreateIndexes." ".$dbTaxonomicInfo." ".$this->userid." ".$this->databaseId." ".$this->configFilePath." ".$this->wgetURL;

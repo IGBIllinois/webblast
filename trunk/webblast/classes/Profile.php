@@ -34,12 +34,59 @@ class Profile
 	{
 	}
 
+    /**
+     * Delete a user's job profile
+     */
 	public function DeleteProfile()
 	{
 		$queryDeleteProfile = "DELETE * FROM blast_profiles WHERE id=".$this->profileid;
 		$this->sqlDataBase->nonSelectQuery($queryDeleteProfile);
 	}
 
+    /**Create a custom job profile, allows a user to create one profile and then run multiple jobs with the same blast settings
+     * @param $newProfileName
+     * @param $loggedUserid
+     * @param $inputp
+     * @param $inputd
+     * @param $inpute
+     * @param $inputm
+     * @param $inputFU
+     * @param $inputGU
+     * @param $inputEU
+     * @param $inputXU
+     * @param $inputIU
+     * @param $inputq
+     * @param $inputr
+     * @param $inputv
+     * @param $inputb
+     * @param $inputf
+     * @param $inputg
+     * @param $inputQU
+     * @param $inputDU
+     * @param $inputa
+     * @param $inputJU
+     * @param $inputMU
+     * @param $inputWU
+     * @param $inputz
+     * @param $inputKU
+     * @param $inputYU
+     * @param $inputSU
+     * @param $inputTU
+     * @param $inputl
+     * @param $inputUU
+     * @param $inputy
+     * @param $inputZU
+     * @param $inputRU
+     * @param $inputn
+     * @param $inputLU
+     * @param $inputAU
+     * @param $inputw
+     * @param $inputt
+     * @param $inputBU
+     * @param $inputCU
+     * @param $paramsEnabled
+     * @param $chunkSize
+     */
 	public function CreateProfile($newProfileName,$loggedUserid,$inputp,$inputd,$inpute,$inputm,$inputFU,$inputGU,$inputEU,$inputXU,$inputIU,$inputq,$inputr,$inputv,$inputb,$inputf,$inputg,$inputQU,$inputDU,$inputa,$inputJU,$inputMU,$inputWU,$inputz,$inputKU,$inputYU,$inputSU,$inputTU,$inputl,$inputUU,$inputy,$inputZU,$inputRU,$inputn,$inputLU,$inputAU,$inputw,$inputt,$inputBU,$inputCU,$paramsEnabled,$chunkSize)
 	{
 		$statusNew=1;
@@ -53,6 +100,9 @@ class Profile
 		
 	}
 
+    /**Load profile from database
+     * @param $id
+     */
 	public function LoadProfile($id)
 	{
 		$sql = "SELECT * FROM blast_profiles WHERE id=".$id;

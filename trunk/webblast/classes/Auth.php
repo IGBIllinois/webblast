@@ -11,8 +11,11 @@ class Auth
 	private $error="No Error Detected";
 	private $sqlDataBase;
 	private $authUser;
-	
-	
+
+    /**Constructor
+     * @param SQLDatabase $sqlDataBase
+     * @param $config_array
+     */
 	public function __construct(SQLDatabase $sqlDataBase,$config_array)
 	{
 		$this->sqlDataBase=$sqlDataBase;
@@ -29,6 +32,10 @@ class Auth
 	
 	}
 
+    /**Check if a session already exists
+     * if it does then authenticate the session token to the username
+     * @return int
+     */
 	public function AuthSession()
 	{
 		if(isset($_SESSION['user_token']) && isset($_SESSION['username']))
@@ -54,21 +61,39 @@ class Auth
 		return 0;
 	}
 
+    /**Authenticate session as admin
+     * @return int
+     */
 	public function AuthSessionAdmin()
         {
-                if(isset($_SESSION['username']) && isset($_SESSION['password']))
+            if(isset($_SESSION['user_token']) && isset($_SESSION['username']) && isset($_SESSION['group']) )
+            {
+                if($this->AuthUserToken($_SESSION['username'], $_SESSION['user_token']) && strcmp($this->adminGroup,$_SESSION['group'])==0)
+                {
+                    echo "Token Match, group match ".$_SESSION['group']."==".$this->adminGroup;
+                    return 1;
+                }
+            }
+            /*
+            if(isset($_SESSION['username']) && isset($_SESSION['password']))
                 {
                         if($this->AuthLogin($_SESSION['username'],$_SESSION['password'],$this->adminGroup))
                         {
                                 return 1;
                         }
                 }
-
+            */
                 $this->UnsetSession();
 
                 return 0;
         }
 
+    /**Authenticate user with Ldap
+     * @param $username
+     * @param $password
+     * @param string $group
+     * @return int
+     */
 	public function AuthLogin($username,$password,$group="")
 	{	
 		if($this->AuthLdap($username,$password,$group))
@@ -79,6 +104,11 @@ class Auth
 		return 0;	
 	}
 
+    /**Authenticate admin with Ldap
+     * @param $username
+     * @param $password
+     * @return int
+     */
 	public function AuthAdminLogin($username,$password)
 	{
 		if($this->AuthLdap($username,$password,$this->adminGroup))
@@ -88,12 +118,20 @@ class Auth
                 }
                 return 0;
 	}
-		
+
+    /**
+     * Logout unset sessions
+     */
 	public function AuthLogout()
 	{
 		$this->UnsetSession();
 	}
 
+    /**Authorize user by session token
+     * @param $username
+     * @param $sessionToken
+     * @return int
+     */
 	public function AuthUserToken($username,$sessionToken)
 	{
 		$this->authUser = new User($this->sqlDataBase);
@@ -106,8 +144,14 @@ class Auth
 			$_SESSION['auth_token']=$sessionToken;
 			return 1;
 		}
-	}	
+	}
 
+    /**Authorize user by Ldap
+     * @param $username
+     * @param $password
+     * @param string $group
+     * @return bool|int
+     */
 	public function AuthLdap($username,$password,$group="")
 	{
 		if ($this->ssl == 1) {
@@ -147,6 +191,11 @@ class Auth
         	return $success;
 	}
 
+    /**Authorize permission to job by token
+     * @param $token
+     * @param $jobid
+     * @return int
+     */
 	public function AuthToken($token,$jobid)
 	{
 		$queryTokenAuth = "SELECT id FROM blast_jobs WHERE token=\"".$token."\" AND id=".$jobid;
@@ -157,7 +206,12 @@ class Auth
 		}
 		return 0;
 	}
-	
+
+    /**Create a new session
+     * @param $username
+     * @param $password
+     * @param int $group
+     */
 	public function CreateSession($username,$password,$group=0)
 	{
 		$_SESSION['username']=$username;
@@ -181,7 +235,10 @@ class Auth
 				
 		}	
 	}
-	
+
+    /**
+     * Unset session variables
+     */
 	public function UnsetSession()
 	{
 		unset($_SESSION['username']);
@@ -191,6 +248,9 @@ class Auth
 		unset($_SESSION['user_token']);
 	}
 
+    /**Return user object of authenticated user
+     * @return mixed
+     */
 	public function GetAuthUser()
 	{
 		return $this->authUser;
